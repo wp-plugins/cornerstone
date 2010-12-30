@@ -34,7 +34,7 @@ Cornerstone has been in private development for some time and is currently in us
 
 Install and Activate the plugin from the Wordpress.org Plugins Repository
 
-### Tutorials
+#### Tutorials
 * [How to Organize Posts in Sections with Cornerstone](http://archetyped.com/know/how-to-organize-posts-in-sections-in-wordpress-with-cornerstone/)
 
 == Upgrade Notice ==
