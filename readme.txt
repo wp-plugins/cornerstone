@@ -12,14 +12,14 @@ Enhanced content management for Wordpress
 
 Cornerstone makes using your favorite web publishing platform (Wordpress) practical for any type of site by enhancing its content management capabilities.  Too long have we had to resort to hacks like using categories in menus to build a psuedo site structure (you know what I'm talking about).
 
-The public beta of Cornerstone includes several enhancements, the primary focus of this release being a feature that allows Wordpress to be used for sites that go beyond just blogging-- **Posts in Sections**.  Create a section, add posts to it, they show up when you navigate to that section.  Simple as that.
+The public beta of Cornerstone includes several enhancements, the primary focus of this release being a feature that allows Wordpress to be used for sites that go beyond just blogging-- **Posts in Sections**.  Create a section, add posts to it, they show up when you navigate to that section.  Simple as that.  It really is, but [here's a tutorial on how to do it](http://archetyped.com/know/how-to-organize-posts-in-sections-in-wordpress-with-cornerstone/) just because I love you.
 
 ### Your feedback makes a difference
 
 Cornerstone has been in private development for some time and is currently in use on several sites on the web (used by somewhat less than 1% of the internet at the time of this writing).  Therefore, the public beta is quite stable and safe to use.  The main purpose of the beta is to get a wider range of user feedback to refine the featureset to something that will benefit users the most. 
 
 ### Features
-* Posts in Sections (see above for more info.  Why are reading from the bottom up?)
+* Posts in Sections (see above for more info.  Why are you reading from the bottom up?)
 * Structured permalinks - post permalinks are based on the section they are in (e.g. ``/section-name/post-name/``)
 * RSS for Sections - Let users subscribe to and receive updates for specific sections on the site.
 
