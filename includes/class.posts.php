@@ -495,29 +495,40 @@ class CNR_Post extends CNR_Base {
 	
 	/**
 	 * Retrieves the post's section data 
-	 * @return string post's section data 
-	 * @param string $type (optional) Type of data to return (Default: ID)
-	 * 	Possible values:
-	 * 	ID		Returns the ID of the section
-	 * 	name	Returns the name of the section
+	 * @param string $data (optional) Section data to return (Default: full section object)
+	 * Possible values:
+	 *  NULL		Full section post object
+	 *	Column name	Post column data (if exists)
+	 *
+	 * @return mixed post's section data (Default: ID value) 
 	 */
-	function get_section($type = 'ID') {
-		global $post;
-		$retval = $post->post_parent;
+	function get_section($post = null, $data = null) {
+		$p = get_post($post);
+		$retval = 0;
+		if ( is_object($p) && isset($p->post_parent) )
+			$retval = intval($p->post_parent);
 		
-		if ('title' == $type) {
-			$retval = get_post_field('post_title', $post->post_parent);
+		//Get specified section data for posts with valid parents
+		if ( $retval > 0 ) {
+			if ( !empty($data) ) {
+				$retval = get_post_field('post_title', $retval);
+			} else {
+				$retval = get_post($retval);
+			}
 		}
+		
 		return $retval;
 	}
 	
 	/**
 	 * Prints the post's section data
+	 * @uses CNR_Post::get_section()
 	 * @param string $type (optional) Type of data to return (Default: ID)
-	 * @see cnr_get_the_section()
 	 */
-	function the_section($type = 'ID') {
-		echo CNR_Post::get_section($type);
+	function the_section($post = null, $data = 'ID') {
+		if ( empty($data) )
+			$data = 'ID';
+		echo CNR_Post::get_section($post, $data);
 	}
 }
 

@@ -147,7 +147,7 @@ class CNR_Feeds extends CNR_Base {
 	function get_item_title($title) {
 		if ( is_feed() && !is_page() ) {
 			//Get item's section
-			$section = CNR_Post::get_section('title');
+			$section = CNR_Post::get_section(null, 'post_title');
 			$title = "$section &#8250; $title"; //Section precedes post title
 			//$title .= " [$section]"; //Section follows post title
 		}

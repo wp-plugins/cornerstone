@@ -3,7 +3,7 @@ Contributors: archetyped
 Tags: cornerstone, cms, content, management, system, structure, organization, sections
 Plugin Link: http://archetyped.com/tools/cornerstone/
 Requires at least: 3.0
-Tested up to: 3.0.3
+Tested up to: 3.0.4
 Stable tag: trunk
 
 Enhanced content management for Wordpress
@@ -52,6 +52,8 @@ Post your questions/comments on the [plugin's home page](http://archetyped.com/t
 1. Quickly modify a post's section
 
 == Changelog ==
+= 0.5.1b =
+* Structure
+ * Fix: Section column duplication bug
 = 0.5b =
 * Public beta
-

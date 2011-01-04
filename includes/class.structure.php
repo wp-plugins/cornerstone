@@ -52,6 +52,12 @@ class CNR_Structure extends CNR_Base {
 	 */
 	var $status_processing = false;
 	
+	/**
+	 * Column name on posts management page
+	 * @var string
+	 */
+	var $management_column = array( 'name' => 'section', 'title' => 'Section' );
+	
 	/* Constructor */
 	
 	/**
@@ -68,6 +74,7 @@ class CNR_Structure extends CNR_Base {
 		parent::__construct();
 		$this->field_parent = $this->add_prefix($this->field_parent);
 		$this->permalink_structure = '/' . $this->util->normalize_path($this->tok_path, $this->tok_post, true);
+		$this->management_column['name'] = $this->add_prefix($this->management_column['name']);
 	}
 	
 	/* Methods */
@@ -592,7 +599,7 @@ class CNR_Structure extends CNR_Base {
 	 * @return array Modified columns array
 	 */
 	function admin_manage_posts_columns($columns) {
-		$columns['section'] = __('Section');
+		$columns[$this->management_column['name']] = __($this->management_column['title']);
 		return $columns;
 	}
 	
@@ -602,15 +609,17 @@ class CNR_Structure extends CNR_Base {
 	 * @param int $post_id ID of current post
 	 */
 	function admin_manage_posts_custom_column($column_name, $post_id) {
-		$section_id = CNR_Post::get_section();
-		$section = null;
-		if ($section_id > 0) 
-			$section = get_post($section_id);
-		if (!empty($section)) {
+		//Only process for specific columns (stop processing otherwise)
+		if ( $this->management_column['name'] != $column_name )
+			return false;
+		//Get section
+		$section = CNR_Post::get_section($post_id);
+
+		if ( !empty($section) ) {
 			echo $section->post_title;
-			echo '<script type="text/javascript">postData["post_' . $post_id . '"] = {"post_parent" : ' . $section_id . '};</script>'; 
+			echo '<script type="text/javascript">postData["post_' . $post_id . '"] = {"post_parent" : ' . $section->ID . '};</script>'; 
 		} else
-			echo 'None';
+			_e('None');
 	}
 	
 	/**

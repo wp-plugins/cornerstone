@@ -3,7 +3,7 @@
 Plugin Name: Cornerstone
 Plugin URI: http://archetyped.com/tools/cornerstone/
 Description: Enhanced content management for Wordpress
-Version: 0.5b
+Version: 0.5.1b
 Author: Archetyped
 Author URI: http://archetyped.com
 */
@@ -120,22 +120,25 @@ function cnr_has_content($post = null) {
 	/* Section */
 	
 /**
- * Retrieves the post's section data 
- * @return string post's section data 
- * @param string $type (optional) Type of data to return (Default: ID)
- * 	Possible values:
- * 	ID		Returns the ID of the section
- * 	name	Returns the name of the section
+ * Retrieves the post's section data
+ * @uses CNR_Post::get_section() 
+ * @param string $data (optional) Type of data to return (Default: ID)
+ * Possible values:
+ *  NULL		Full section post object
+ *	Column name	Post column data (if exists)
+ *
+ * @param int $id (optional) Post ID (Default: current post)
+ * @return mixed post's section (or column data if specified via $data parameter) 
  */
-function cnr_get_the_section($type = 'ID') {
-	return CNR_Post::get_section($type);
+function cnr_get_the_section($data = 'ID', $id = null) {
+	return CNR_Post::get_section($id, $data);
 }
 
 /**
  * Prints the post's section data
- * @param string $type (optional) Type of data to return (Default: ID)
- * @see cnr_get_the_section()
+ * @uses CNR_Post::the_section()
+ * @param string $data (optional) Type of data to return (Default: ID)
  */
-function cnr_the_section($type = 'ID') {
-	CNR_Post::the_section($type);
+function cnr_the_section($data = 'ID') {
+	CNR_Post::the_section(null, $data);
 }
