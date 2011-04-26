@@ -1,6 +1,8 @@
 <?php
 
 require_once 'includes/class.base.php';
+require_once 'includes/class.content-types.php';
+require_once 'includes/class.media.php';
 require_once 'includes/class.posts.php';
 require_once 'includes/class.structure.php';
 require_once 'includes/class.feeds.php';
@@ -10,6 +12,21 @@ require_once 'includes/class.feeds.php';
  */
 class Cornerstone extends CNR_Base {
 	/* Variables */
+	
+	/* Featured Content variables */
+	
+	/**
+	 * @var string Category slug value that denotes a "featured" post
+	 * @see posts_featured_cat()
+	 * @todo Remove need for this property
+	 */
+	var $posts_featured_cat = "feature";
+
+	/**
+	 * Featured posts container
+	 * @var CNR_Post_Query
+	 */
+	var $posts_featured = null;
 	
 	/* Children Content Variables */
 	
@@ -26,6 +43,12 @@ class Cornerstone extends CNR_Base {
 	 * @var CNR_Structure
 	 */
 	var $structure = null;
+	
+	/**
+	 * Media instance
+	 * @var CNR_Media
+	 */
+	var $media = null;
 	
 	/**
 	 * Post class instance
@@ -50,19 +73,20 @@ class Cornerstone extends CNR_Base {
 		parent::__construct();
 		
 		//Special Queries
+		$this->posts_featured =& new CNR_Post_Query( array( 'category' => $this->posts_featured_get_cat_id(), 'numberposts' => 4 ) );
 		$this->post_children_collection =& new CNR_Post_Query();
 		
 		//Register hooks
 		$this->register_hooks();
 		
 		//Init class instances
-		$this->structure = new CNR_Structure();
+		$this->structure =& new CNR_Structure();
 		$this->structure->init();
 		
-		$this->post = new CNR_Post();
-		$this->post->init();
+		$this->media =& new CNR_Media();
+		$this->media->init();
 		
-		$this->feeds = new CNR_Feeds();
+		$this->feeds =& new CNR_Feeds();
 		$this->feeds->init();
 	}
 	
@@ -78,7 +102,6 @@ class Cornerstone extends CNR_Base {
 		add_action('admin_enqueue_scripts', $this->m('admin_add_scripts'));
 		
 		//Posts
-		add_filter('the_posts', $this->m('post_children_get'));
 		add_filter('wp_list_pages', $this->m('post_section_highlight'));
 	}
 	
@@ -98,7 +121,8 @@ class Cornerstone extends CNR_Base {
 	 * Registers scripts for admin pages
 	 */
 	function admin_register_scripts() {
-		wp_register_script( $this->add_prefix('script_admin'), $this->util->get_file_url('js/cnr_admin.js'), array('jquery') );
+		wp_register_script( $this->add_prefix('core'), $this->util->get_file_url('js/cnr.js'), array('jquery') );
+		wp_register_script( $this->add_prefix('admin'), $this->util->get_file_url('js/cnr_admin.js'), array('jquery') );
 		wp_register_script( $this->add_prefix('inline-edit-post'), $this->util->get_file_url('js/inline-edit-post.js'), array('jquery', 'inline-edit-post') );
 	}
 	
@@ -121,7 +145,8 @@ class Cornerstone extends CNR_Base {
 	 */
 	function admin_add_scripts() {
 		//Default admin scripts
-		wp_enqueue_script($this->add_prefix('script_admin'));
+		wp_enqueue_script($this->add_prefix('core'));
+		wp_enqueue_script($this->add_prefix('admin'));
 		//Edit Posts
 		if ( is_admin() && $this->util->is_file('edit.php') ) {
 			wp_enqueue_script( $this->add_prefix('inline-edit-post') );
@@ -233,12 +258,50 @@ class Cornerstone extends CNR_Base {
 		echo $this->page_title_get($args);
 	}
 	
+/*-** Featured Content **-*/
+	
+	/**
+	 * Retrieves featured post category object
+	 * @return object Featured post category object
+	 * @todo integrate into CNR_Post_Query
+	 */
+	function posts_featured_get_cat() {
+		static $cat = null;
+		
+		//Only fetch category object if it hasn't already been retrieved
+		if (is_null($cat) || !is_object($cat)) {
+			//Retrieve category object
+			if (is_int($this->posts_featured_cat)) {
+				$cat = get_category((int)$this->posts_featured_cat);
+			}
+			elseif (is_string($this->posts_featured_cat) && strlen($this->posts_featured_cat) > 0) {
+				$cat = get_category_by_slug($this->posts_featured_cat);
+			}
+		}
+		
+		return $cat;
+	}
+	
+	/**
+	 * @todo integrate into CNR_Post_Query
+	 */
+	function posts_featured_get_cat_id() {
+		static $id = '';
+		if ($id == '') {
+			$cat = $this->posts_featured_get_cat();
+			if (!is_null($cat) && is_object($cat) && $this->util->property_exists($cat, 'cat_ID'))
+				$id = $cat->cat_ID;
+		}
+		return $id;
+	}
+	
 	/**
 	 * Highlights post's section in site structure output
 	 * Called when site structure is output by wp_list_pages()
 	 * Adds additional CSS classes to current section
 	 * @param string $output Site structure in HTML
 	 * @return string Site structure HTML with current section highlighted
+	 * @todo Review for deletion/relocation
 	 */
 	function post_section_highlight($output) {
 		$class_current = 'current_page_item';
@@ -273,6 +336,7 @@ class Cornerstone extends CNR_Base {
 	 * Checks if post has content to display
 	 * @param object $post (optional) Post object
 	 * @return bool TRUE if post has content, FALSE otherwise
+	 * @todo Review for deletion/relocation
 	 */
 	function post_has_content($post = null) {
 		if ( !$this->util->check_post($post) )

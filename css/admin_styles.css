@@ -153,3 +153,7 @@ ul.empty {
 .cnr_group_wrap .single_field_has_elements legend {
 	display: none;
 }
+
+.cnr_pages_dropdown select {
+	width: 100%;
+}

@@ -26,10 +26,6 @@ class CNR_Feeds extends CNR_Base {
 		parent::__construct();
 	}
 	
-	function init() {
-		$this->register_hooks();
-	}
-	
 	/* Methods */
 	
 	/**

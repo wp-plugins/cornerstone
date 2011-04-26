@@ -59,6 +59,14 @@ class CNR_Post_Query extends CNR_Base {
 	var $args;
 	
 	/**
+	 * Argument to be used during query to identify request
+	 * Prefix added during init
+	 * @see init()
+	 * @var string
+	 */
+	var $arg_fetch = 'fetch';
+	
+	/**
 	 * TRUE if posts have been fetched, FALSE otherwise
 	 * @var bool
 	 */
@@ -76,7 +84,7 @@ class CNR_Post_Query extends CNR_Base {
 		
 		//Set arguments
 		if ( !empty($args) && is_array($args) ) {
-			$this->args =& $args;
+			$this->args = wp_parse_args($args, $this->args);
 		}
 	}
 	
@@ -91,7 +99,8 @@ class CNR_Post_Query extends CNR_Base {
 		$this->current = -1;
 		$this->count = 0;
 		$this->found = 0;
-		$this->args = array();
+		$this->arg_fetch = $this->add_prefix($this->arg_fetch);
+		$this->args = array($this->arg_fetch => true);
 		$this->fetched = false;
 	}
 	
@@ -161,23 +170,35 @@ class CNR_Post_Query extends CNR_Base {
 		if ( !empty($args) )
 			$this->args = wp_parse_args($args, $this->args);
 		//Set post limit
-		if ( is_numeric($limit) ) {
+		if ( is_numeric($limit) )
 			$limit = intval($limit);
-			if ( ! $limit ) {
-				$limit = ( is_feed() ) ? get_option('posts_per_rss') : get_option('posts_per_page');
-			}
-			if ( $limit > 0 )
-				$this->set_arg('numberposts', $limit);
+		if ( ! $limit && !$this->arg_isset('numberposts') )
+			$limit = ( is_feed() ) ? get_option('posts_per_rss') : get_option('posts_per_page');
+		if ( $limit > 0 )
+			$this->set_arg('numberposts', $limit);
+		
+		//Set offset (pagination)
+		if ( !is_feed() ) {
+			$c_page = $wp_query->get('paged');
+			$offset = ( $c_page > 0 ) ? $c_page - 1 : 0;
+			$offset = $limit * $offset;
+			$this->set_arg('offset', $offset);
 		}
 		
-		//Retrieve featured posts
-		$callback = $this->m('set_found');
+		//Retrieve posts
 		$filter = 'found_posts';
+		$f_callback = $this->m('set_found');
+		$action = 'parse_query';
+		$a_callback = $this->m('set_found_flag');
+		
 		//Add filter to populate found property during query
-		add_filter($filter, $callback);
-		//Remove filter after query has completed
+		add_filter($filter, $f_callback);
+		add_action($action, $a_callback);
+		//Get posts
 		$posts =& get_posts($this->args);
-		remove_filter($filter, $callback);
+		//Remove filter after query has completed
+		remove_action($action, $a_callback);
+		remove_filter($filter, $f_callback);
 		//Save retrieved posts to array
 		$this->load($posts);
 		//Return retrieved posts so that array may be manipulated further if desired
@@ -223,6 +244,17 @@ class CNR_Post_Query extends CNR_Base {
 	}
 	
 	/**
+	 * @see WP_Query::parse_query()
+	 * @link `parse_query` action hook
+	 * @param WP_Query $q Query instance object
+	 */
+	function set_found_flag(&$q) {
+		if ( isset($q->query_vars[$this->arg_fetch]) ) {
+			$q->query_vars['no_found_rows'] = false;
+		}
+	}
+	
+	/**
 	 * Returns number of matching posts found in DB
 	 * May not necessarily match number of posts contained in object (due to post limits, pagination, etc.)
 	 * @return int Number of posts found
@@ -247,7 +279,7 @@ class CNR_Post_Query extends CNR_Base {
 	 * @global obj $post
 	 */
 	function has( $fetch = true ) {
-		global $wp_query, $post;
+		global $wp_query, $post, $more;
 		
 		//Get posts if not yet fetched
 		if ( $fetch && !$this->fetched ) {
@@ -271,6 +303,8 @@ class CNR_Post_Query extends CNR_Base {
 			setup_postdata($post);
 		}
 		
+		if ( is_single() || is_page() )
+			$more = 1;
 		return false;
 	}
 	
@@ -282,7 +316,7 @@ class CNR_Post_Query extends CNR_Base {
 	 * @global obj $post Post object
 	 */
 	function next() {
-		global $post;
+		global $post, $more;
 		
 		if ( $this->has() ) {
 			//Increment post position
@@ -292,6 +326,7 @@ class CNR_Post_Query extends CNR_Base {
 			$post = $this->posts[ $this->current ];
 			
 			setup_postdata($post);
+			$more = 0;
 		}
 	}
 	
@@ -511,7 +546,7 @@ class CNR_Post extends CNR_Base {
 		//Get specified section data for posts with valid parents
 		if ( $retval > 0 ) {
 			if ( !empty($data) ) {
-				$retval = get_post_field('post_title', $retval);
+				$retval = get_post_field($data, $retval);
 			} else {
 				$retval = get_post($retval);
 			}

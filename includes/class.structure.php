@@ -79,10 +79,6 @@ class CNR_Structure extends CNR_Base {
 	
 	/* Methods */
 	
-	function init() {
-		$this->register_hooks();
-	}
-	
 	function register_hooks() {
 		parent::register_hooks();
 
@@ -100,6 +96,9 @@ class CNR_Structure extends CNR_Base {
 		add_filter('post_type_link', $this->m('post_link'), 10, 3);
 		//TODO: Handle redirect_canonical (currently not evaluated)
 //		add_filter('redirect_canonical', $this->m('post_link'), 10, 2);
+
+		//Navigation
+		add_filter('wp_nav_menu_objects', $this->m('nav_menu_objects'), 10, 2);
 		
 		//Admin
 		add_filter('admin_enqueue_scripts', $this->m('admin_enqueue_scripts'));
@@ -357,6 +356,50 @@ class CNR_Structure extends CNR_Base {
 		return $rules_temp;
 	}
 	
+	/**
+	 * Performs additional processing on nav menu objects
+	 * > Adds additional classes to menu items based on current request
+	 * @see wp_nav_menu()
+	 * @uses `wp_nav_menu_objects` filter hook to modify items
+	 * @param array $menu_items Sorted menu items
+	 * @param object $args Arguments passed to function
+	 * @return array Menu items array 
+	 */
+	function nav_menu_objects($menu_items, $args) {
+		$class_base = 'current-page-';
+		$class_ancestor = $class_base . 'ancestor';
+		$class_parent = $class_base . 'parent';
+		//Get current item
+		if ( is_singular()
+			&& ( $item = get_queried_object() )
+			&& !empty($item->post_type)
+			&& !is_post_type_hierarchical($item->post_type) //Only process non-hierarchical post types
+		) {
+			//Get ancestors of current item
+			$ancestors = get_ancestors($item->ID, $item->post_type);
+			
+			//Loop through menu items and add classes to ancestors of current item
+			foreach ( $menu_items as $key => $m_item ) {
+				//Only process menu items representing posts/pages
+				if ( isset($m_item->type) && 'post_type' == $m_item->type && in_array($m_item->object_id, $ancestors) ) {
+					//Add ancestor class to item
+					if ( !is_array($m_item->classes) )
+						$m_item->classes = array();
+					$m_item->classes[] = $class_ancestor;
+					//Check if menu item is parent of current item
+					if ( $item->post_parent == $m_item->object_id )
+						$m_item->classes[] = $class_parent;
+					//Filter duplicate classes
+					$m_item->classes = array_unique($m_item->classes);
+					//Update menu array
+					$menu_items[$key] = $m_item;
+				}
+			}
+		}
+		
+		return $menu_items;
+	}
+	
 	/*-** Helpers **-*/
 	
 	/**
@@ -551,11 +594,17 @@ class CNR_Structure extends CNR_Base {
 	 * @param object $post Post Object
 	 */
 	function admin_post_sidebar_section($post) {
+		?>
+		<div class="<?php echo $this->add_prefix('pages_dropdown'); ?>">
+		<?php
 		wp_dropdown_pages(array('exclude_tree' => $post->ID,
 								'selected' => $post->post_parent,
 								'name' => $this->field_parent,
 								'show_option_none' => __('- No Section -'),
 								'sort_column'=> 'menu_order, post_title'));
+		?>
+		</div>
+		<?php
 	}
 	
 	/**
@@ -631,7 +680,7 @@ class CNR_Structure extends CNR_Base {
 		global $post;
 		$child_types = get_post_types(array('show_ui' => true, '_builtin' => false));
 		$child_types[] = 'post';
-		if ( $column_name == 'section' && in_array($type, $child_types) ) :
+		if ( $column_name == $this->add_prefix('section') && in_array($type, $child_types) ) :
 		?>
 		<fieldset class="inline-edit-col-right">
 			<div class="inline-edit-col">

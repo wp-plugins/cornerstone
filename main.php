@@ -3,7 +3,7 @@
 Plugin Name: Cornerstone
 Plugin URI: http://archetyped.com/tools/cornerstone/
 Description: Enhanced content management for Wordpress
-Version: 0.5.1b
+Version: 0.6b
 Author: Archetyped
 Author URI: http://archetyped.com
 */
@@ -40,7 +40,6 @@ function cnr_the_feed_links() {
 
 /**
  * Checks if current post/page has children elements
- * 
  * @return bool TRUE if post/page has children, FALSE otherwise
  */
 function cnr_have_children() {
@@ -105,6 +104,64 @@ function cnr_is_last_child() {
 	return $cnr->post_children_collection->is_last();
 }
 
+/*-** Featured Content **-*/
+
+/**
+ * Retrieves featured posts
+ * @return array Featured posts matching criteria 
+ * @param int $limit (optional) Maximum number of featured posts to retrieve
+ * @param int|bool $parent (optional) Section to get featured posts of (Defaults to current section).  FALSE if latest featured posts should be retrieved regardless of section
+ */
+function cnr_get_featured($limit = 0, $parent = null) {
+	global $cnr;
+	return $cnr->posts_featured->get($limit, $parent);
+}
+
+function cnr_in_featured($post_id = null) {
+	global $cnr;
+	return $cnr->posts_featured->contains($post_id);
+}
+
+function cnr_have_featured() {
+	global $cnr;
+	return $cnr->posts_featured->has();
+}
+
+function cnr_next_featured() {
+	global $cnr;
+	return $cnr->posts_featured->next();
+	
+}
+
+function cnr_current_featured() {
+	global $cnr;
+	return $cnr->posts_featured->current();
+}
+
+function cnr_is_first_featured() {
+	global $cnr;
+	return $cnr->posts_featured->is_first();
+}
+
+function cnr_is_last_featured() {
+	global $cnr;
+	return $cnr->posts_featured->is_last();
+}
+
+function cnr_featured_count() {
+	global $cnr;
+	return $cnr->posts_featured->count();
+}
+
+/**
+ * Returns total number of found posts
+ * @return int Total number of posts
+ */
+function cnr_featured_found() {
+	global $cnr;
+	return $cnr->posts_featured->found();
+}
+
 /*-** Post-Specific **-*/
 
 /**
@@ -115,6 +172,18 @@ function cnr_is_last_child() {
 function cnr_has_content($post = null) {
 	global $cnr;
 	return $cnr->post_has_content($post);
+}
+
+	/* Images */
+
+function cnr_get_attachments($post = null) {
+	$m = new CNR_Media();
+	return $m->post_get_attachments($post);
+}
+ 
+function cnr_get_filesize($post = null, $formatted = true) {
+	$m = new CNR_Media();
+	return $m->get_attachment_filesize($post, $formatted);
 }
 
 	/* Section */

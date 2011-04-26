@@ -1,30 +1,32 @@
+if ( typeof(cnr) == 'undefined' || typeof(cnr) != 'object' )
+	cnr = {};
 if ( typeof(postData) == 'undefined' )
 	postData = {};
 (function($) {
 	//Move init method to guarantee execution order
 	inlineEditPost.initSaved = inlineEditPost.init;
 	inlineEditPost.init = function() {};
-	
 	//Extend inlineEditPost object
-	cnrInlineEditPost = jQuery.extend({}, inlineEditPost);
+	cnr.inlineEditPost = $.extend({}, inlineEditPost);
 	
-	cnrInlineEditPost.field_parent = 'cnr_post_parent';
-	
-	cnrInlineEditPost.init = function() {
+	cnr.inlineEditPost.field_parent = 'cnr_post_parent';
+	cnr.inlineEditPost.init = function() {
 		//Execute default init method
-		inlineEditPost.initSaved();
+		if ( inlineEditPost.initSaved )
+			inlineEditPost.initSaved();
 		//Unbind quick edit click events
 		$('a.editinline').die('click');
 		//Bind new quick edit click handler
-		$('a.editinline').live('click', function() { cnrInlineEditPost.editHandler(this); return false; });
+		$('a.editinline').live('click', function() { cnr.inlineEditPost.editHandler(this); return false; });
 		var qeRow = $('#inline-edit');
-		$('a.save', qeRow).click(function() { return cnrInlineEditPost.save(this); });
-		$('td', qeRow).keydown(function(e) { if (e.which == 13) { return cnrInlineEditPost.save(this); } });
+		$('a.save', qeRow).click(function() { return cnr.inlineEditPost.save(this); });
+		$('td', qeRow).keydown(function(e) { if (e.which == 13) { return cnr.inlineEditPost.save(this); } });
 		//Restore original init method for future use
-		inlineEditPost.init = inlineEditPost.initSaved;
+		if ( inlineEditPost.initSaved )
+			inlineEditPost.init = inlineEditPost.initSaved;
 	};
 	
-	cnrInlineEditPost.save = function(id) {
+	cnr.inlineEditPost.save = function(id) {
 		var t = this, post_id, post_parent;
 		//Update post data
 		if (typeof(id) == 'object')
@@ -47,13 +49,13 @@ if ( typeof(postData) == 'undefined' )
 		return true;
 	};
 	
-	cnrInlineEditPost.editHandler = function(id) {
+	cnr.inlineEditPost.editHandler = function(id) {
 		this.preEdit(id);
 		inlineEditPost.edit(id);
 		this.postEdit(id);
 	}
 	
-	cnrInlineEditPost.preEdit = function(id) {
+	cnr.inlineEditPost.preEdit = function(id) {
 		var t = this, post_id, section_select, parent_id;
 		if (typeof(id) == 'object')
 			id = t.getId(id);
@@ -67,9 +69,9 @@ if ( typeof(postData) == 'undefined' )
 		}
 	};
 	
-	cnrInlineEditPost.postEdit = function(id) {
+	cnr.inlineEditPost.postEdit = function(id) {
 		$('#inline-edit #' + this.field_parent + ' option').removeAttr('selected');
 	};
 	
-	$(document).ready(function() {cnrInlineEditPost.init();});
+	$(document).ready(function() {cnr.inlineEditPost.init();});
 })(jQuery);
