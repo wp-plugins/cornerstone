@@ -11,6 +11,21 @@ Enhanced content management for Wordpress
 == Description ==
 Cornerstone makes using your favorite web publishing platform (Wordpress) practical for any type of site by enhancing its content management capabilities.  Too long have we had to resort to hacks like using categories in menus to build a pseudo site structure (you know what I'm talking about).
 
+### BETA NOTES
+The current release is a beta version.  Please test and [provide feedback on the beta release page](http://archetyped.com/lab/cnr-0-6-beta/).
+Main changes
+
+#### Beta 2
+* Optimize: Internal performance
+* Fix: Section posts fetched prior to checking posts' properties
+
+#### Beta 1
+* Add: Content type support
+* Add: Media support
+* Optimize: Code cleanup
+* Fix: Pagingation compatibility for Wordpress 3.1+
+* Fix: Various bug fixes
+
 The public beta of Cornerstone includes several enhancements, the primary focus of this release being a feature that allows Wordpress to be used for sites that go beyond just blogging-- **Posts in Sections**.  Create a section, add posts to it, they show up when you navigate to that section.  Simple as that.  It really is, but [here's a tutorial on how to do it](http://archetyped.com/know/how-to-organize-posts-in-sections-in-wordpress-with-cornerstone/) just because I think you're awesome.
 
 ### Your feedback makes a difference
@@ -37,6 +52,8 @@ Install and Activate the plugin from the Wordpress.org Plugins Repository
 
 #### Tutorials
 * [How to Organize Posts in Sections with Cornerstone](http://archetyped.com/know/how-to-organize-posts-in-sections-in-wordpress-with-cornerstone/)
+* [Cornerstone: Creating Custom Content Types in WordPress](http://archetyped.com/know/cornerstone-creating-custom-content-types-in-wordpress/)
+* [Cornerstone: Using Custom Field Data in WordPress](http://archetyped.com/know/cornerstone-using-custom-field-data-in-wordpress/)
 
 == Upgrade Notice ==
 
@@ -53,12 +70,7 @@ Post your questions/comments on the [plugin's beta release page](http://archetyp
 1. Quickly modify a post's section
 
 == Changelog ==
-= 0.6b =
-* Add: Content type support
-* Add: Media support
-* Optimize: Code cleanup
-* Fix: Pagingation compatibility for Wordpress 3.1+
-* Fix: Various bug fixes
+
 = 0.5.1b =
 * Structure
  * Fix: Section column duplication bug

@@ -237,6 +237,8 @@ class CNR_Post_Query extends CNR_Base {
 	
 	/**
 	 * Sets number of found posts in object's query
+	 * @link `found_posts` hook
+	 * @see WP_Query::get_posts()
 	 * @param int $num_found 
 	 */
 	function set_found($num_found) {
@@ -244,6 +246,8 @@ class CNR_Post_Query extends CNR_Base {
 	}
 	
 	/**
+	 * Modifies query parameters to allow `found_posts` hook to be called
+	 * Unsets `no_found_rows` query parameter set in WP 3.1
 	 * @see WP_Query::parse_query()
 	 * @link `parse_query` action hook
 	 * @param WP_Query $q Query instance object
@@ -255,11 +259,21 @@ class CNR_Post_Query extends CNR_Base {
 	}
 	
 	/**
+	 * Makes sure query was run prior
+	 * @return void
+	 */
+	function confirm_fetched() {
+		if ( !$this->fetched )
+			$this->get();
+	}
+
+	/**
 	 * Returns number of matching posts found in DB
 	 * May not necessarily match number of posts contained in object (due to post limits, pagination, etc.)
 	 * @return int Number of posts found
 	 */
 	function found() {
+		$this->confirm_fetched();
 		return $this->found;
 	}
 	
@@ -281,10 +295,7 @@ class CNR_Post_Query extends CNR_Base {
 	function has( $fetch = true ) {
 		global $wp_query, $post, $more;
 		
-		//Get posts if not yet fetched
-		if ( $fetch && !$this->fetched ) {
-			$this->get();
-		}
+		$this->confirm_fetched();
 		
 		//Check if any posts on current page were retrieved
 		//If posts are found, make sure there are more posts
@@ -352,6 +363,7 @@ class CNR_Post_Query extends CNR_Base {
 	 * @return int number of posts
 	 */
 	function count() {
+		$this->confirm_fetched();
 		return $this->count;
 	}
 	
@@ -360,6 +372,7 @@ class CNR_Post_Query extends CNR_Base {
 	 * @return int Total number of pages
 	 */
 	function max_num_pages() {
+		$this->confirm_fetched();
 		$posts_per_page = $this->get_arg('numberposts');
 		if ( ! $posts_per_page )
 			$posts_per_page = get_option('posts_per_page');
@@ -371,6 +384,7 @@ class CNR_Post_Query extends CNR_Base {
 	 * @return bool TRUE if current post is the first post in array, FALSE otherwise
 	 */
 	function is_first() {
+		$this->confirm_fetched();
 		return ( 0 == $this->current() );
 	}
 	
@@ -379,6 +393,7 @@ class CNR_Post_Query extends CNR_Base {
 	 * @return bool TRUE if item is the last featured item, FALSE otherwise
 	 */
 	function is_last() {
+		$this->confirm_fetched();
 		return ($this->current == $this->count - 1) ? true : false;
 	}
 	
@@ -387,6 +402,7 @@ class CNR_Post_Query extends CNR_Base {
 	 * @return bool TRUE if post is in posts array
 	 */
 	function contains( $post = null ) {
+		$this->confirm_fetched();
 		//Use argument value if it is an integer
 		if ( is_numeric($post) && intval($post) > 0 ) {
 			//Cast to object and set ID property (for later use)
@@ -406,6 +422,8 @@ class CNR_Post_Query extends CNR_Base {
 	 * Retrieve IDs of all retrieved posts
 	 */
 	function get_ids() {
+		$this->confirm_fetched();
+		
 		if ( $this->has && empty($this->post_ids) ) {
 			//Build array of post ids in array
 			foreach ($this->posts as $post) {

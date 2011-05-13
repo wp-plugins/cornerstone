@@ -75,7 +75,10 @@ class Cornerstone extends CNR_Base {
 		//Special Queries
 		$this->posts_featured =& new CNR_Post_Query( array( 'category' => $this->posts_featured_get_cat_id(), 'numberposts' => 4 ) );
 		$this->post_children_collection =& new CNR_Post_Query();
-		
+
+		$this->post =& new CNR_Post();
+		$this->post->init();
+
 		//Register hooks
 		$this->register_hooks();
 		
