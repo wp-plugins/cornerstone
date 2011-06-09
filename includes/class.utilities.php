@@ -902,36 +902,40 @@ class CNR_Debug {
 	
 	/**
 	 * Retrieve current function name
+	 * @uses CNR_Debug::backtrace() to retrieve caller properties
 	 * @param string|array $properties (optional) Properties to retrieve for current function
+	 * @param bool $echo (optional) Whether or not to print backtrace output (Default: false)
 	 * @return string|array Current function properties. Default: function name.  Will return array if multiple properties are requested
 	 * @see CNR_Debug::backtrace 
 	 */
-	function get_current($properties = 'function') {
-		return $this->backtrace($properties, 1, 2);
+	function get_current($properties = 'function', $echo = false) {
+		return $this->backtrace($properties, 1, 2, $echo);
 	}
 	
 	/**
 	 * Retrieves calling function name
-	 * @param string|array $properties (optional) Properties to retrieve for caller
+	 * @uses CNR_Debug::backtrace() to retrieve caller properties
+	 * @param string|array $properties (optional) Properties to retrieve for caller (Default: calling function)
+	 * @param bool $echo (optional) Whether or not to print backtrace output (Default: false)
 	 * @return string|array Calling function properties. Default: function name.  Will return array if multiple properties are requested
-	 * @see CNR_Debug::backtrace 
 	 */
-	function get_caller($properties = 'function') {
-		return $this->backtrace($properties, 1, 3);
+	function get_caller($properties = 'function', $echo = false) {
+		return $this->backtrace($properties, 1, 3, $echo);
 	}
 	
 	/**
 	 * Return customized backtrace
 	 * @param string|array $properties (optional) Properties to retrieve for each level (Default: all properties) Can be comma-delimited string or array
 	 * @param int $levels (optional) Number of levels to retrieve (Default: entire backtrace)
-	 * @param int $offset (optional) Where to start backtrace output (e.g. Remove current/wrapper functions from output, etc.)
+	 * @param int $offset (optional) Where to start backtrace output (Default: 1 - Removes current/wrapper functions from output, etc.)
+	 * @param bool $echo (optional) Whether or not to print backtrace output (Default: false)
 	 * @return array|string Backtrace output as Array. Will output string if only one level with one property is in output
 	 */
-	function backtrace($properties = null, $levels = null, $offset = 1) {
+	function backtrace($properties = null, $levels = null, $offset = 1, $echo = false) {
 		$out = array();
 		$debug = debug_backtrace();
 		//Remove current & calling functions from trace
-		$offset = ( intval($offset) ) ? intval($offset) : 1;
+		$offset = intval($offset);
 		$debug = array_slice($debug, $offset);
 		if ( ($debug_levels = count($debug)) ) {
 			//Setup levels
@@ -964,6 +968,8 @@ class CNR_Debug {
 		//Extract value if single level is in output
 		if ( count($out) == 1 && count($out[0]) == 1 && $out = array_values($out[0]) )
 			$out = $out[0];
+		if ( $echo )
+			$this->print_message($out);
 		return $out;
 	}
 }

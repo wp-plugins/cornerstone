@@ -186,7 +186,7 @@ class CNR_Base {
 	 * @param bool $once (optional) Whether to add prefix to text that already contains a prefix or not
 	 * @return string Text with prefix prepended
 	 */
-	function add_prefix($text, $sep = null, $once = true) {
+	function add_prefix($text, $sep = '_', $once = true) {
 		if ( $this->has_prefix($text, $sep) )
 			return $text;
 		return $this->get_prefix($sep) . $text;

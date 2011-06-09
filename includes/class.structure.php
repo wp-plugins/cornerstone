@@ -418,18 +418,24 @@ class CNR_Structure extends CNR_Base {
 	 * @param bool $meta_only Whether only post metadata should be updated (not actual post object)
 	 * @return updated post object
 	 */
-	function set_parent($post, $parent, $meta_only = false) {
+	function set_parent($post, $parent = null, $meta_only = true) {
 		//Clear metadata if parent = 0
 		if ( is_numeric($parent) && 0 == intval($parent) )
 			return $this->clear_parent($post, $meta_only);
-		//Validate variables
-		if ( !$this->util->check_post($post) || !$this->util->check_post($parent) || !isset($parent->ID) || $post->ID == $parent->ID )
+			
+		//Validate post/parent
+		if ( !$this->util->check_post($post) || ( is_null($parent) && !isset($post->post_parent) ) )
 			return false;
+		if ( is_null($parent) )
+			$parent = $post->post_parent;
+		if ( $this->util->check_post($parent) || !isset($parent->ID) || $post->ID == $parent->ID )
+			return false;
+			
 		//Add/Update metadata (hidden)
 		update_post_meta($post->ID, $this->get_parent_meta_key(), $parent->ID);
-		//Update Post data
-		$post->post_parent = $parent->ID;
+		//Update DB (if desired)
 		if ( !$meta_only ) {
+			$post->post_parent = $parent->ID;
 			$this->status_processing = true;
 			wp_update_post($post);
 			$this->status_processing = false;
@@ -444,13 +450,14 @@ class CNR_Structure extends CNR_Base {
 	 * @param bool $meta_only Whether only post metadata should be updated (not actual post object)
 	 * @return updated post object 
 	 */
-	function clear_parent($post, $meta_only = false) {
+	function clear_parent($post, $meta_only = true) {
 		if ( !$this->util->check_post($post) )
 			return false;
-		//Delete metadata if parent not set
+		//Delete parent metadata
 		delete_post_meta($post->ID, $this->get_parent_meta_key());
-		$post->post_parent = 0;
+		//Update DB (if desired)
 		if ( !$meta_only ) {
+			$post->post_parent = 0;
 			$this->status_processing = true;
 			wp_update_post($post);
 			$this->status_processing = false;
@@ -488,8 +495,8 @@ class CNR_Structure extends CNR_Base {
 	/**
 	 * Set post parent for current post
 	 * If custom field is present in $postarr, use value to set post's parent
-	 * Post parent is set in WP posts table (as post_parent value)
-	 * @see CNR_Structure::admin_post_save() Saves parent as metadata for post
+	 * Post parent is set in WP posts table (as post_parent value) in calling function
+	 * @see $this->admin_post_save() Saves parent as metadata for post
 	 * @see wp_insert_post()
 	 * @uses $this->field_parent as field name to check for
 	 * @param array $data Post data (restricted default columns only) 
@@ -522,15 +529,13 @@ class CNR_Structure extends CNR_Base {
 	 * @param obj $post Saved post object
 	 */
 	function admin_post_save($post_ID, $post) {
-		if ( in_array($post->post_type, array('revision','page')) || $this->status_processing )
+		//Skip invalid requests
+		if ( !is_object($post) || !isset($post->post_parent) || !isset($post->post_name) || in_array($post->post_type, array('revision','page')) || $this->status_processing )
 			return;
 		//Check if instance post name value matches post being saved
-		if ( $post->post_parent > 0 && !is_null($this->data_insert_post_name) && !empty($post) && isset($post->post_name) && $post->post_name == $this->data_insert_post_name ) {
+		if ( !is_null($this->data_insert_post_name) && $post->post_name == $this->data_insert_post_name ) {
 			//Add metadata (hidden)
-			$this->set_parent($post, $post->post_parent);
-		} else {
-			//Delete metadata if parent not set
-			$this->clear_parent($post);
+			$this->set_parent($post);
 		}
 		//Clear instance value
 		$this->data_insert_post_name = null;

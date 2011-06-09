@@ -1,5 +1,5 @@
 === Cornerstone ===
-Contributors: archetyped
+Contributors: Archetyped
 Tags: cornerstone, cms, content, management, system, structure, organization, sections
 Plugin Link: http://archetyped.com/tools/cornerstone/
 Requires at least: 3.0
@@ -14,6 +14,9 @@ Cornerstone makes using your favorite web publishing platform (Wordpress) practi
 ### BETA NOTES
 The current release is a beta version.  Please test and [provide feedback on the beta release page](http://archetyped.com/lab/cnr-0-6-beta/).
 Main changes
+
+#### Beta 3
+* Fix: Section not always saved
 
 #### Beta 2
 * Optimize: Internal performance
