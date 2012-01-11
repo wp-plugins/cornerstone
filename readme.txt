@@ -1,5 +1,6 @@
 === Cornerstone ===
 Contributors: Archetyped
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=AF29GFAFMT83N
 Tags: cornerstone, cms, content, management, system, structure, organization, sections
 Plugin Link: http://archetyped.com/tools/cornerstone/
 Requires at least: 3.0
