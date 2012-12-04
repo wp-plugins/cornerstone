@@ -6,21 +6,14 @@ require_once 'class.content-types.php';
  * Core properties/methods for Media management
  * @package Cornerstone
  * @subpackage Media
- * @author SM
+ * @author Archetyped
  */
 class CNR_Media extends CNR_Base {
 	
 	var $var_field = 'field';
 	
 	var $var_action = 'action';
-	
-	/**
-	 * Legacy Constructor
-	 */
-	function CNR_Media() {
-		$this->__construct();
-	}
-	
+
 	/**
 	 * Constructor
 	 */
@@ -80,7 +73,7 @@ class CNR_Media extends CNR_Base {
 		$media->set_layout('form', '{media}');
 		$media->set_layout('display', '{media format="display"}');
 		$media->set_layout('display_url', '{media format="display" type="url"}');
-		$media->add_script( array('add', 'edit-item', 'post-new.php', 'post.php', 'media-upload-popup'), $this->add_prefix('script_media'), $this->util->get_file_url('js/media.js'), array($this->add_prefix('core'), $this->add_prefix('admin')));
+		$media->add_script( array('add', 'edit-item', 'post-new.php', 'post.php', 'media-upload-popup'), $this->add_prefix('script_media'), $this->util->get_file_url('js/lib.media.js'), array($this->add_prefix('core'), $this->add_prefix('admin')));
 		$field_types[$media->id] =& $media;
 		
 		$image = new CNR_Field_Type('image');
@@ -151,8 +144,8 @@ class CNR_Media extends CNR_Base {
 					<div class="actions buttons">
 						<a href="<?php echo "$media_upload_iframe_src" ?>" id="<?php echo "$media_name-lnk"?>" class="thickbox button" title="{title}" onclick="return false;">{button}</a>
 						<span id="<?php echo "$media_name-options"?>" class="options <?php if (!$post_media_valid) : ?> options-default <?php endif; ?>">
-						or <a href="#" title="Remove media" class="del-link" id="<?php echo "$media_name-option_remove"?>" onclick="cnr.media.doAction(this); return false;">{remove}</a>
-						 <span id="<?php echo "$media_name-remove_confirmation"?>" class="confirmation remove-confirmation confirmation-default">Are you sure? <a href="#" id="<?php echo "$media_name-remove"?>" class="delete" onclick="return cnr.media.doAction(this);">Remove</a> or <a href="#" id="<?php echo "$media_name-remove_cancel"?>" onclick="return cnr.media.doAction(this);">Cancel</a></span>
+						or <a href="#" title="Remove media" class="del-link" id="<?php echo "$media_name-option_remove"?>" onclick="CNR.media.doAction(this); return false;">{remove}</a>
+						 <span id="<?php echo "$media_name-remove_confirmation"?>" class="confirmation remove-confirmation confirmation-default">Are you sure? <a href="#" id="<?php echo "$media_name-remove"?>" class="delete" onclick="return CNR.media.doAction(this);">Remove</a> or <a href="#" id="<?php echo "$media_name-remove_cancel"?>" onclick="return CNR.media.doAction(this);">Cancel</a></span>
 						</span>
 					</div>
 			<?php
@@ -177,7 +170,7 @@ class CNR_Media extends CNR_Base {
 	
 	/**
 	 * Handles upload of Post media on post edit form
-	 * @return 
+	 * @return void 
 	 */
 	function field_upload_media() {
 		$errors = array();
@@ -203,22 +196,9 @@ class CNR_Media extends CNR_Base {
 				$args->preview = wp_get_attachment_image_src($a->ID, '', $icon);
 				$args->preview = ( ! $args->preview ) ? '' : $args->preview[0];
 			}
-			//Build JS Arguments string
-			$arg_string = '';
-			foreach ( (array)$args as $key => $val ) {
-				if ( ! empty($arg_string) )
-					$arg_string .= ',';
-				$arg_string .= "'$key':'$val'";
-			}
-			$arg_string = '{' . $arg_string . '}';
-			?>
-			<script type="text/javascript">
-			/* <![CDATA[ */
-			var win = window.dialogArguments || opener || parent || top;
-			win.cnr.media.setPostMedia(<?php echo $arg_string; ?>);
-			/* ]]> */
-			</script>
-			<?php
+			//Update parent window (JS)
+			$js_out = "var win = window.dialogArguments || opener || parent || top; win.CNR.media.setPostMedia(" . json_encode($args) . ");";
+			echo $this->util->build_script_element($js_out, 'media_upload', false);
 			exit;
 		}
 		
@@ -277,6 +257,7 @@ class CNR_Media extends CNR_Base {
 			//Add "Set as Image" button to form fields array
 			$set_as = 'Set as ' . $set_as;
 			$field = array(
+							'label'		=> '',
 							'input'		=> 'html',
 							'html'		=> '<input type="submit" class="button" value="' . $set_as . '" name="setmedia[' . $post->ID . ']" />'
 							);
@@ -610,7 +591,7 @@ class CNR_Media extends CNR_Base {
 				$attribs = '';
 				$attr_format = '%s="%s"';
 				foreach ($attributes as $attr => $val) {
-					$attribs .= sprintf($attr_format, $attr, attribute_escape($val));
+					$attribs .= sprintf($attr_format, $attr, esc_attr($val));
 				}
 				$attributes = $attribs;
 			}

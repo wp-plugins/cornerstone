@@ -3,7 +3,7 @@
 Plugin Name: Cornerstone
 Plugin URI: http://archetyped.com/tools/cornerstone/
 Description: Enhanced content management for Wordpress
-Version: 0.6b3
+Version: 0.7b1
 Author: Archetyped
 Author URI: http://archetyped.com
 */
@@ -12,20 +12,9 @@ Author URI: http://archetyped.com
  * @package Cornerstone 
  */
 require_once('model.php');
-$cnr =& new Cornerstone();
+$cnr = new Cornerstone();
 
 /* Template tags */
-
-/**
- * Outputs formatted page title for current page
- * @return void
- * @param string|array Arguments for formatting page title
- * May be an associative array or querystring-style list of arguments
- */
-function cnr_page_title($args = '') {
-	global $cnr;
-	$cnr->page_title($args);
-}
 
 /**
  * Outputs feed links based on current page
@@ -37,6 +26,10 @@ function cnr_the_feed_links() {
 }
 
 /*-** Child Content **-*/
+
+function cnr_is_section() {
+	return ( is_page() && cnr_have_children() ) ? true : false;
+}
 
 /**
  * Checks if current post/page has children elements

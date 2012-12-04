@@ -1,10 +1,10 @@
 === Cornerstone ===
 Contributors: Archetyped
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=AF29GFAFMT83N
+Donate: http://mycharitywater.org/archetyped-2012-fall
 Tags: cornerstone, cms, content, management, system, structure, organization, sections
 Plugin Link: http://archetyped.com/tools/cornerstone/
-Requires at least: 3.0
-Tested up to: 3.1.1
+Requires at least: 3.4.2
+Tested up to: 3.5
 Stable tag: trunk
 
 Enhanced content management for Wordpress
@@ -13,22 +13,14 @@ Enhanced content management for Wordpress
 Cornerstone makes using your favorite web publishing platform (Wordpress) practical for any type of site by enhancing its content management capabilities.  Too long have we had to resort to hacks like using categories in menus to build a pseudo site structure (you know what I'm talking about).
 
 ### BETA NOTES
-The current release is a beta version.  Please test and [provide feedback on the beta release page](http://archetyped.com/lab/cnr-0-6-beta/).
+The current release is a beta version.  Please test and [provide feedback on the beta release page](http://archetyped.com/lab/cnr-0-7-beta/).
 Main changes
 
-#### Beta 3
-* Fix: Section not always saved
-
-#### Beta 2
-* Optimize: Internal performance
-* Fix: Section posts fetched prior to checking posts' properties
-
 #### Beta 1
-* Add: Content type support
-* Add: Media support
-* Optimize: Code cleanup
-* Fix: Pagingation compatibility for Wordpress 3.1+
-* Fix: Various bug fixes
+* Optimize: Permalink structure reset when plugin activated/deactivated
+* Optimize: Post Editor: Update permalink preview when section changed
+* Optimize: Improved client-side file loading
+* Optimize: Encapsulate client-side code
 
 The public beta of Cornerstone includes several enhancements, the primary focus of this release being a feature that allows Wordpress to be used for sites that go beyond just blogging-- **Posts in Sections**.  Create a section, add posts to it, they show up when you navigate to that section.  Simple as that.  It really is, but [here's a tutorial on how to do it](http://archetyped.com/know/how-to-organize-posts-in-sections-in-wordpress-with-cornerstone/) just because I think you're awesome.
 
@@ -36,7 +28,7 @@ The public beta of Cornerstone includes several enhancements, the primary focus 
 
 Cornerstone has been in private development for some time and is currently in use on several sites on the web.  Therefore, the public beta is quite stable and safe to use.  The main purpose of the beta is to get a wider range of user feedback to refine the feature set to something that will benefit users the most.
 
-[Post your feedback on Cornerstone](http://archetyped.com/lab/cnr-0-6-beta/)
+[Post your feedback on Cornerstone](http://archetyped.com/lab/cnr-0-7-beta/)
 
 ### Features
 * ''NEW: Content Types'' - Add custom fields to default (posts, pages, etc.) and custom (events, properties, etc.) post types
@@ -65,7 +57,7 @@ No upgrade notices
 
 == Frequently Asked Questions ==
 
-Post your questions/comments on the [plugin's beta release page](http://archetyped.com/lab/cnr-0-6-beta/).
+Post your questions/comments on the [plugin's beta release page](http://archetyped.com/lab/cnr-0-7-beta/).
 
 == Screenshots ==
 
@@ -74,6 +66,17 @@ Post your questions/comments on the [plugin's beta release page](http://archetyp
 1. Quickly modify a post's section
 
 == Changelog ==
+
+= 0.6 =
+* Add: Content type support
+* Add: Media support
+* Add: Display tagline in home page title
+* Optimize: Internal performance
+* Optimize: Code cleanup
+* Fix: Section not always saved
+* Fix: Section posts fetched prior to checking posts' properties
+* Fix: Pagingation compatibility for Wordpress 3.1+
+* Fix: Various bug fixes
 
 = 0.5.1b =
 * Structure

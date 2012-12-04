@@ -7,7 +7,7 @@ require_once 'class.posts.php';
  * Core properties/methods for feed management
  * @package Cornerstone
  * @subpackage Feeds
- * @author SM
+ * @author Archetyped
  * @uses CNR_Post
  */
 class CNR_Feeds extends CNR_Base {
@@ -32,16 +32,19 @@ class CNR_Feeds extends CNR_Base {
 	 * Registers plugin hooks
 	 */
 	function register_hooks() {
-		add_action('template_redirect', $this->m('feed_redirect'));
-		add_filter('get_wp_title_rss', $this->m('get_title'));
-		add_filter('get_bloginfo_rss', $this->m('get_description'), 10, 2);
-		add_filter('the_title_rss', $this->m('get_item_title'), 9);
-		add_filter('the_content', $this->m('get_item_content'));
+		// add_action('template_redirect', $this->m('feed_redirect'));
+		// add_filter('get_wp_title_rss', $this->m('get_title'));
+		// add_filter('get_bloginfo_rss', $this->m('get_description'), 10, 2);
+		// add_filter('the_title_rss', $this->m('get_item_title'), 9);
+		add_filter('the_content_feed', $this->m('get_item_content'));
 		add_filter('the_excerpt_rss', $this->m('get_item_content'));
+
 		//Feed links (header)
+		/*
 		if ( $p = has_action('wp_head', 'feed_links_extra') )
 			remove_action('wp_head', 'feed_links_extra', $p);
 		add_action('wp_head', $this->m('feed_links_extra'));
+		*/
 	}
 	
 	/**
@@ -72,7 +75,7 @@ class CNR_Feeds extends CNR_Base {
 	 * Example: Pages (Sections) should load the normal feed template (instead of the comments feed template)
 	 */
 	function feed_redirect() {
-		if (is_page() && is_feed()) {
+		if ( is_page() && is_feed() ) {
 			//Turn off comments feed for sections
 			global $wp_query;
 			$wp_query->is_comment_feed = false;
@@ -145,29 +148,8 @@ class CNR_Feeds extends CNR_Base {
 			//Get item's section
 			$section = CNR_Post::get_section(null, 'post_title');
 			$title = "$section &#8250; $title"; //Section precedes post title
-			//$title .= " [$section]"; //Section follows post title
 		}
 		return $title;
-	}
-	
-	/**
-	 * Generates site source text for feed items
-	 * Helpful in directing readers to original content source when feeds are scraped
-	 * To be added to feed item output
-	 * @param string $content Post content
-	 * @return string Updated post content
-	 */
-	function get_item_source($content) {
-		/* Conditions
-		 * > Request for feed
-		 * > Looping through posts
-		 * > Retrieving content (not excerpt)
-		 */
-		if ( is_feed() && in_the_loop() && ( 'get_the_excerpt' != current_filter() ) ) {
-			$source = '<p><a href="' . get_permalink() . '"> ' . get_the_title() . '</a> was originally published on <a href="' . get_bloginfo('url') . '">' . get_bloginfo() . '</a> on ' . get_the_time('F j, Y h:ia') . '</p>';
-			$content .= $source;
-		}
-		return $content;
 	}
 	
 	/**
@@ -176,18 +158,19 @@ class CNR_Feeds extends CNR_Base {
 	 * @return string Updated post content
 	 */
 	function get_item_content($content = '') {
-		global $post, $wp_current_filter;
+		global $post;
 		
 		//Skip processing in the following scenarios
 		// > Request is not feed
 		// > Current post requires a password
-		// > Current filter is retrieving data for the excerpt and post has no actual excerpt (i.e. generating excerpt from post content)
-		if ( !is_feed() || post_password_required() || ( isset($wp_current_filter['get_the_excerpt']) && strlen($post->excerpt) == '' ) )
+		if ( !is_feed() || post_password_required() ) {
 			return $content;
+		}
 
-		//Process post content
-		if ( 'the_content' == current_filter() )
-			$content = $this->get_item_source($content);
+		//Add post thumbnail
+		if ( has_post_thumbnail() ) {
+			$content = get_the_post_thumbnail(null, 'large') . $content;
+		}
 		
 		return $content;	
 	}
@@ -202,13 +185,16 @@ class CNR_Feeds extends CNR_Base {
 		$link_template = '<a class="link_feed" rel="alternate" href="%1$s" title="%3$s">%2$s</a>';
 		//Page specific feeds
 		if ( is_page() || is_single() ) {
-			global $post;
-			$href = get_post_comments_feed_link($post->ID);
-			if ( is_page() )
-				$title = __('Subscribe to this Section');
-			else
-				$title = __('Subscribe to Comments');
-			$links[$href] = $title;
+			global $post, $wpdb;
+			$is_p = $wpdb->get_var("SELECT COUNT(*) FROM $wpdb->posts WHERE ID = $post->ID");
+			if ( $is_p ) {
+				$href = get_post_comments_feed_link($post->ID);
+				if ( is_page() )
+					$title = __('Subscribe to this Section');
+				else
+					$title = __('Subscribe to Comments');
+				$links[$href] = $title;
+			}
 		} elseif ( is_search() ) {
 			$links[get_search_feed_link()] = __('Subscribe to this Search');
 		} elseif ( is_tag() ) {

@@ -5,7 +5,7 @@ require_once 'class.base.php';
 /**
  * @package Cornerstone
  * @subpackage Posts
- * @author SM
+ * @author Archetyped
  * 
  * Represents a collection of posts in a query
  * Handles navigating through post collection, reporting status, etc.
@@ -14,6 +14,20 @@ require_once 'class.base.php';
 class CNR_Post_Query extends CNR_Base {
 	
 	/*-** Variables **-*/
+	
+	var $scripts = array (
+		'posts'		=> array (
+			'file'		=> 'js/lib.posts.js',
+			'deps'		=> '[core]',
+			'context'	=> 'admin'
+		),
+		/*'quicktags'	=> array (
+			'file'		=> 'js/lib.posts.quicktags.js',
+			'deps'		=> 'quicktags', '[posts]',
+			'context'	=> array('admin_action_edit-item', 'admin_action_add')
+		)
+		*/
+	);
 	
 	/**
 	 * Holds posts
@@ -78,7 +92,8 @@ class CNR_Post_Query extends CNR_Base {
 	
 	function __construct( $args = null ) {
 		parent::__construct();
-
+		
+		parent::init();
 		//Init properties
 		$this->init();
 		
@@ -305,7 +320,7 @@ class CNR_Post_Query extends CNR_Base {
 		
 		//Reset current post position if all posts have been processed
 		$this->rewind();
-		
+		$wp_query->in_the_loop = false;
 		//If no posts were found (or the last post has been previously loaded),
 		//load previous post back into global post variable
 		$i = ( $wp_query->current_post >= 0 ) ? $wp_query->current_post : 0;
@@ -327,9 +342,10 @@ class CNR_Post_Query extends CNR_Base {
 	 * @global obj $post Post object
 	 */
 	function next() {
-		global $post, $more;
+		global $post, $more, $wp_query;
 		
 		if ( $this->has() ) {
+			$wp_query->in_the_loop = true;
 			//Increment post position
 			$this->current++;
 			
@@ -439,15 +455,57 @@ class CNR_Post_Query extends CNR_Base {
 /**
  * @package Cornerstone
  * @subpackage Posts
- * @author SM
+ * @author Archetyped
  *
  */
 class CNR_Post extends CNR_Base {
+	
+	/*-** Properties **-*/
+	
+	/**
+	 * Script files
+	 * @see CNR_Base::client_files
+	 * @var array
+	 */
+	var $scripts = array (
+		'posts'		=> array (
+			'file'		=> 'js/lib.posts.js',
+			'deps'		=> '[core]',
+			'context'	=> 'admin'
+		),
+		'quicktags'	=> array (
+			'file'		=> 'js/lib.posts.quicktags.js',
+			'deps'		=> 'quicktags', '[posts]',
+			'context'	=> array('admin_action_edit-item', 'admin_action_add')
+		)
+	);
+	
+	/**
+	 * Default title separator
+	 * @var string
+	 */
+	var $title_sep = '&lsaquo;';
 	
 	/*-** Initialization **-*/
 	
 	function register_hooks() {
 		parent::register_hooks();
+		
+		//Template
+		// add_filter('wp_title', $this->m('page_title'), 11, 3);
+		
+		//Admin
+		add_action('admin_head', $this->m('admin_set_title'), 11);
+		
+		//TinyMCE
+		/*
+		add_filter('mce_css', $this->m('admin_mce_css'));
+		add_filter('mce_buttons', $this->m('admin_mce_buttons'));
+		add_filter('mce_external_plugins', $this->m('admin_mce_external_plugins'));
+		
+		//Activate Shortcodes
+		$this->sc_activate();
+		*/
 	}
 	
 	/**
@@ -465,10 +523,11 @@ class CNR_Post extends CNR_Base {
 		if ( is_object($post) && !empty($parents) && ('id' != strtolower(trim($prop))) ) {
 			//Retrieve post data for parents if full data or property other than post ID is required
 			$args = array(
-						'include'		=> implode(',', $parents),
+						'include'		=> $parents,
 						'post_type'		=> 'any',
 						);
 			$ancestors = get_posts($args);
+			
 			//Sort array in ancestor order
 			$temp_parents = array();
 			foreach ($ancestors as $ancestor) {
@@ -512,7 +571,7 @@ class CNR_Post extends CNR_Base {
 	function &get_children($post = null) {
 		//Global variables
 		global $wp_query;
-		$children =& new CNR_Post_Query();
+		$children = new CNR_Post_Query();
 		if ( empty($post) && !empty($wp_query->posts) )
 			$post = $wp_query->posts[0];
 		
@@ -547,7 +606,7 @@ class CNR_Post extends CNR_Base {
 	/*-** Post Metadata **-*/
 	
 	/**
-	 * Retrieves the post's section data 
+	 * Retrieves the post's section data
 	 * @param string $data (optional) Section data to return (Default: full section object)
 	 * Possible values:
 	 *  NULL		Full section post object
@@ -582,6 +641,182 @@ class CNR_Post extends CNR_Base {
 		if ( empty($data) )
 			$data = 'ID';
 		echo CNR_Post::get_section($post, $data);
+	}
+	
+	/*-** Admin **-*/
+	
+	function admin_set_title() {
+		global $post;
+		
+		if ( !$post )
+			return false;
+		
+		$obj = new stdClass();
+		//Section title
+		$sec = $this->get_section($post);
+		if ( $sec )
+			$obj->item_section = get_the_title($sec);
+		//Separator
+		$obj->title_sep = $this->page_title_get_sep();
+		$this->util->extend_client_object('posts', $obj, true);
+	}
+
+	/**
+	 * Add IntURL CSS to editor
+	 * @uses `mce_css` filter hook to add file
+	 * @param string $mce_css Comma-separated list of CSS files to be added for editor
+	 * @return string Modified list of CSS files
+	 */
+	function admin_mce_css($mce_css) {
+		$mce_css .= ',' . $this->util->get_file_url('mce/mce_styles.css') . '?v=' . $this->util->get_plugin_version();
+		return $mce_css;
+	}
+	
+	/**
+	 * Register custom TinyMCE plugin
+	 * @param array $plugin_array Array of TinyMCE plugins
+	 * @return array Modified array of TinyMCE plugins
+	 */
+	function admin_mce_external_plugins($plugin_array) {
+		$plugin_array[$this->add_prefix('inturl')] = $this->util->get_file_url('mce/plugins/inturl/editor_plugin.js');
+		return $plugin_array;
+	}
+	
+	/**
+	 * Add button to TinyMCE toolbar UI
+	 * @param array $buttons Array of toolbar buttons
+	 * @return array Modified toolbar buttons array
+	 */
+	function admin_mce_buttons($buttons) {
+		//Find Link button
+		$pos = array_search('unlink', $buttons);
+		if ($pos !== false)
+			$pos += 1;
+		else
+			$pos = count($buttons);
+		
+		//Insert button into buttons array
+		$start = array_slice($buttons, 0, $pos);
+		$end = array_slice($buttons, $pos);
+		$start[] = $this->add_prefix('inturl');
+		$buttons = array_merge($start, $end);
+		return $buttons;
+	}
+	
+	function page_title_get_sep($pad = true) {
+		$sep = $this->title_sep;
+		if ( $pad )
+			$sep = ' ' . trim($sep) . ' ';
+		return $sep;
+	}
+	
+	/*-** Template **-*/
+	
+	/**
+	 * Builds page title for current request
+	 * Adds subtitle to title
+	 * Filter called by `wp_title` hook
+	 * @param $title
+	 * @param $sep
+	 * @param $seplocation
+	 * @return string Title text
+	 */
+	function page_title_get($title, $sep = '', $seplocation = '') {
+		global $post;
+		
+		$sep = $this->page_title_get_sep();
+		
+		if ( is_single() ) {
+			//Append section name to post title
+			$ptitle = get_the_title();
+			$ptitle_pos = ( $ptitle ) ? strpos($title, $ptitle) : false;
+			if ( $ptitle_pos !== false ) {
+				//Get section
+				if ( ( $sec = $this->get_section($post) ) ) {
+					//Append section name to post title only once
+					$title = substr_replace($ptitle, $ptitle . $sep . get_the_title($sec), $ptitle_pos, strlen($ptitle)) . substr($title, strlen($ptitle));
+				}
+			}
+		}
+		
+		//Return new title
+		return $title;
+	}
+	
+	/**
+	 * Builds page title for current request
+	 * Filter called by `wp_title` hook
+	 * @param $title
+	 * @param $sep
+	 * @param $seplocation
+	 * @return string Title text
+	 * @uses CNR::page_title_get()
+	 */
+	function page_title($title, $sep = '', $seplocation = '') {
+		return $this->page_title_get($title, $sep, $seplocation);
+	}
+	
+	/*-** Shortcodes **-*/
+	
+	/**
+	 * Shortcode activation
+	 * @return void
+	 */
+	function sc_activate() {
+		add_shortcode("inturl", $this->m('sc_inturl'));
+	}
+	
+	/**
+	 * Internal URL Shortcode
+	 * 
+	 * Creates links to internal content based on the current permalink structure
+	 * @return string Output for shortcode
+	 */
+	function sc_inturl($atts, $content = null) {
+		$ret = '';
+		$url_default = '#';
+		$format = '<a href="%1$s" title="%2$s">%3$s</a>';
+		$defaults = array(
+						 'id'		=>	0,
+						 'type'		=>	'post',
+						 'title'	=>	'',
+						 'anchor'	=>	''
+						 );
+		
+		extract(shortcode_atts($defaults, $atts));
+		
+		$anchor = trim($anchor);
+		if (!empty($anchor))
+			$anchor = $url_default . $anchor;
+		
+		//Get URL/Permalink
+		if ($type == 'post') {
+			$id = (is_numeric($id)) ? (int) $id : 0;
+			if ($id != 0) {
+				$url = get_permalink($id);
+				if (!$url)
+					$url = $url_default;
+			}
+			else
+				$url = $url_default;
+			
+			//Add anchor to URL
+			if ($url != $url_default)
+				$url .= $anchor;
+			
+			//Link Title
+			$title = trim($title);
+			if ($title == '' && $url != $url_default)
+				$title = get_post_field('post_title', $id);
+			$title = esc_attr($title);
+		
+			if (empty($content) && $url != $url_default)
+				$content = $url;
+				
+			$ret = sprintf($format, $url, $title, $content);
+		}
+		
+		return $ret;
 	}
 }
 
