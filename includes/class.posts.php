@@ -21,12 +21,6 @@ class CNR_Post_Query extends CNR_Base {
 			'deps'		=> '[core]',
 			'context'	=> 'admin'
 		),
-		/*'quicktags'	=> array (
-			'file'		=> 'js/lib.posts.quicktags.js',
-			'deps'		=> 'quicktags', '[posts]',
-			'context'	=> array('admin_action_edit-item', 'admin_action_add')
-		)
-		*/
 	);
 	
 	/**
@@ -115,7 +109,7 @@ class CNR_Post_Query extends CNR_Base {
 		$this->count = 0;
 		$this->found = 0;
 		$this->arg_fetch = $this->add_prefix($this->arg_fetch);
-		$this->args = array($this->arg_fetch => true);
+		$this->args = array($this->arg_fetch => true, $this->get_prefix() => true);
 		$this->fetched = false;
 	}
 	
@@ -473,11 +467,6 @@ class CNR_Post extends CNR_Base {
 			'deps'		=> '[core]',
 			'context'	=> 'admin'
 		),
-		'quicktags'	=> array (
-			'file'		=> 'js/lib.posts.quicktags.js',
-			'deps'		=> 'quicktags', '[posts]',
-			'context'	=> array('admin_action_edit-item', 'admin_action_add')
-		)
 	);
 	
 	/**
@@ -496,16 +485,6 @@ class CNR_Post extends CNR_Base {
 		
 		//Admin
 		add_action('admin_head', $this->m('admin_set_title'), 11);
-		
-		//TinyMCE
-		/*
-		add_filter('mce_css', $this->m('admin_mce_css'));
-		add_filter('mce_buttons', $this->m('admin_mce_buttons'));
-		add_filter('mce_external_plugins', $this->m('admin_mce_external_plugins'));
-		
-		//Activate Shortcodes
-		$this->sc_activate();
-		*/
 	}
 	
 	/**
@@ -661,48 +640,6 @@ class CNR_Post extends CNR_Base {
 		$this->util->extend_client_object('posts', $obj, true);
 	}
 
-	/**
-	 * Add IntURL CSS to editor
-	 * @uses `mce_css` filter hook to add file
-	 * @param string $mce_css Comma-separated list of CSS files to be added for editor
-	 * @return string Modified list of CSS files
-	 */
-	function admin_mce_css($mce_css) {
-		$mce_css .= ',' . $this->util->get_file_url('mce/mce_styles.css') . '?v=' . $this->util->get_plugin_version();
-		return $mce_css;
-	}
-	
-	/**
-	 * Register custom TinyMCE plugin
-	 * @param array $plugin_array Array of TinyMCE plugins
-	 * @return array Modified array of TinyMCE plugins
-	 */
-	function admin_mce_external_plugins($plugin_array) {
-		$plugin_array[$this->add_prefix('inturl')] = $this->util->get_file_url('mce/plugins/inturl/editor_plugin.js');
-		return $plugin_array;
-	}
-	
-	/**
-	 * Add button to TinyMCE toolbar UI
-	 * @param array $buttons Array of toolbar buttons
-	 * @return array Modified toolbar buttons array
-	 */
-	function admin_mce_buttons($buttons) {
-		//Find Link button
-		$pos = array_search('unlink', $buttons);
-		if ($pos !== false)
-			$pos += 1;
-		else
-			$pos = count($buttons);
-		
-		//Insert button into buttons array
-		$start = array_slice($buttons, 0, $pos);
-		$end = array_slice($buttons, $pos);
-		$start[] = $this->add_prefix('inturl');
-		$buttons = array_merge($start, $end);
-		return $buttons;
-	}
-	
 	function page_title_get_sep($pad = true) {
 		$sep = $this->title_sep;
 		if ( $pad )
@@ -754,69 +691,6 @@ class CNR_Post extends CNR_Base {
 	 */
 	function page_title($title, $sep = '', $seplocation = '') {
 		return $this->page_title_get($title, $sep, $seplocation);
-	}
-	
-	/*-** Shortcodes **-*/
-	
-	/**
-	 * Shortcode activation
-	 * @return void
-	 */
-	function sc_activate() {
-		add_shortcode("inturl", $this->m('sc_inturl'));
-	}
-	
-	/**
-	 * Internal URL Shortcode
-	 * 
-	 * Creates links to internal content based on the current permalink structure
-	 * @return string Output for shortcode
-	 */
-	function sc_inturl($atts, $content = null) {
-		$ret = '';
-		$url_default = '#';
-		$format = '<a href="%1$s" title="%2$s">%3$s</a>';
-		$defaults = array(
-						 'id'		=>	0,
-						 'type'		=>	'post',
-						 'title'	=>	'',
-						 'anchor'	=>	''
-						 );
-		
-		extract(shortcode_atts($defaults, $atts));
-		
-		$anchor = trim($anchor);
-		if (!empty($anchor))
-			$anchor = $url_default . $anchor;
-		
-		//Get URL/Permalink
-		if ($type == 'post') {
-			$id = (is_numeric($id)) ? (int) $id : 0;
-			if ($id != 0) {
-				$url = get_permalink($id);
-				if (!$url)
-					$url = $url_default;
-			}
-			else
-				$url = $url_default;
-			
-			//Add anchor to URL
-			if ($url != $url_default)
-				$url .= $anchor;
-			
-			//Link Title
-			$title = trim($title);
-			if ($title == '' && $url != $url_default)
-				$title = get_post_field('post_title', $id);
-			$title = esc_attr($title);
-		
-			if (empty($content) && $url != $url_default)
-				$content = $url;
-				
-			$ret = sprintf($format, $url, $title, $content);
-		}
-		
-		return $ret;
 	}
 }
 
